@@ -1,6 +1,6 @@
 [project]
-name = "flame"
-version = "0.1.0"
+name = "flamecli"
+version = "0.1.1"
 description = "AI-powered CLI coding assistant with API"
 requires-python = ">=3.10"
 dependencies = [
@@ -20,4 +20,3 @@ packages = {find = {where = ["src"]}}
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
-
