@@ -191,14 +191,53 @@ class FileExecutor:
             MAX_LINES = 100
             content = target_path.read_text(encoding="utf-8")
             lines = content.splitlines()
-            if len(lines) > MAX_LINES:
-                lines = lines[:MAX_LINES]
-                lines.append(f"\n... (truncated to first {MAX_LINES} lines)")
             
-            self.console.print(f"[blue]📖 Auto-read file: {filepath}[/blue]")
-            return "\n".join(lines)
+            # Format with line numbers
+            formatted_lines = [f"{i+1} | {line}" for i, line in enumerate(lines)]
+            
+            if len(formatted_lines) > MAX_LINES:
+                formatted_lines = formatted_lines[:MAX_LINES]
+                formatted_lines.append(f"\n... (truncated to first {MAX_LINES} lines)")
+            
+            self.console.print(f"[blue]Ÿ“– Auto-read file: {filepath}[/blue]")
+            return "\n".join(formatted_lines)
         except Exception as e:
             return f"Error reading file '{filepath}': {str(e)}"
+
+    def read_file_lines(self, filepath: str, start: int, end: int) -> str:
+        """Read specific lines of a file (auto-approved).
+
+        Args:
+            filepath: Relative path to file
+            start: Start line number (1-indexed)
+            end: End line number (inclusive, 1-indexed)
+
+        Returns:
+            Formatted lines or error
+        """
+        target_path = (self.base_dir / filepath).resolve()
+
+        if not self._is_path_safe(target_path):
+            return "Error: Security restriction."
+
+        if not target_path.exists():
+            return f"Error: File '{filepath}' not found."
+
+        try:
+            content = target_path.read_text(encoding="utf-8")
+            all_lines = content.splitlines()
+            
+            # Adjust to 0-indexed
+            s = max(0, int(start) - 1)
+            e = min(len(all_lines), int(end))
+            
+            selected_lines = all_lines[s:e]
+            formatted = [f"{s + i + 1} | {line}" for i, line in enumerate(selected_lines)]
+            
+            self.console.print(f"[blue]Ÿ“– Auto-read partial file: {filepath} (Lines {start}-{end})[/blue]")
+            return "\n".join(formatted)
+        except Exception as e:
+            return f"Error: {str(e)}"
 
     def list_dir(self, directory: str = ".") -> str:
         """List contents of a directory (auto-approved).

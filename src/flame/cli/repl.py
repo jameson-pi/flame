@@ -80,6 +80,7 @@ class REPL:
         """Register all available tools."""
         self.tool_registry.register_tool(system.run_command_tool(self.command_executor))
         self.tool_registry.register_tool(fs.read_file_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.read_lines_tool(self.file_executor))
         self.tool_registry.register_tool(fs.create_file_tool(self.file_executor))
         self.tool_registry.register_tool(fs.edit_file_tool(self.file_executor))
         self.tool_registry.register_tool(fs.ls_tool(self.file_executor))
@@ -149,7 +150,14 @@ class REPL:
 
         if "YES" in needs_plan:
             self.console.print("[yellow]🧠 Complex request detected, generating plan...[/yellow]")
-            plan_messages = self.messages + [{"role": "user", "content": f"User request: {user_message}\nGenerate a definitive PLAN.md for this task. Focus on technical steps."}]
+            plan_messages = self.messages + [
+                {"role": "user", "content": (
+                    f"User request: {user_message}\n"
+                    "Generate a definitive technical plan for this task. Use a clear structure with numbered steps.\n"
+                    "Available tools: read, ls, find, grep, errors, run, create, edit.\n"
+                    "The plan will be shown to the user and then executed step-by-step."
+                )}
+            ]
             plan_content = self.client.chat_complete(plan_messages, model="google/gemini-3-flash-preview")
             
             # Save the plan in .flame directory with timestamp
@@ -168,24 +176,98 @@ class REPL:
             self.console.print(Panel(Markdown(plan_content), border_style="cyan"))
             self.console.print("\n")
             
-            # Inject plan into context
-            self.system_context.inject_snippet(f"Current Plan ({plan_filename})", plan_content)
-            self.add_system_message() # Refresh system message with snippet
+            # Enter Plan Mode: Multi-turn loop to execute the plan
+            self.console.print("[bold yellow]🚀 Entering Plan Execution Mode...[/bold yellow]")
+            
+            # Inject plan into initial context for the execution turn
+            plan_context_name = f"Current Plan ({plan_filename})"
+            self.system_context.inject_snippet(plan_context_name, plan_content)
+            
+            # Start a sub-conversation for plan execution
+            # This allows the model to have multiple turns to read, check errors, and then create/edit
+            plan_exec_messages = list(self.messages)
+            plan_exec_messages.append({"role": "assistant", "content": f"I have generated a plan and saved it to {plan_filename}:\n\n{plan_content}"})
+            plan_exec_messages.append({"role": "user", "content": f"Now, proceed with the plan step-by-step. Use /read and /errors to verify files before editing or after creating if needed. Current task: {user_message}"})
 
-            # Add the plan generation itself to the message history to give model grounding
-            self.messages.append({"role": "assistant", "content": f"I have generated a plan and saved it to {plan_filename}:\n\n{plan_content}"})
-
-            # Now use gemini-3-flash-preview to execute the plan
-            execution_prompt = f"Executing plan from {plan_filename} to fulfill user request: {user_message}\n\nPlease proceed with the steps defined in the plan using your tools."
-            self._execute_with_model(execution_prompt, model="google/gemini-3-flash-preview")
+            # Run multi-turn execution
+            self._execute_multi_turn(plan_exec_messages, model="google/gemini-3-flash-preview")
             
             # Cleanup
-            self.system_context.remove_snippet(f"Current Plan ({plan_filename})")
-            # We keep the plan file in .flame for history, or delete it if preferred. 
-            # The user just asked to change WHERE it is saved and the NAME.
+            self.system_context.remove_snippet(plan_context_name)
+            
+            # Sync the final state back to main history
+            # We don't want to bloat the main history too much, but we should record that it happened
+            self.messages.append({"role": "assistant", "content": f"Task completed according to the plan in {plan_filename}."})
         else:
-            # Normal execution with gemini-3-flash-preview
+            # Normal single-turn execution with gemini-3-flash-preview
             self._execute_with_model(user_message, model="google/gemini-3-flash-preview")
+
+    def _execute_multi_turn(self, conversation_messages: list, model: str, max_turns: int = 10):
+        """Execute a multi-turn conversation loop for complex plans."""
+        turn_count = 0
+        while turn_count < max_turns:
+            turn_count += 1
+            
+            # Refresh system prompt with latest context (including snippets)
+            self.add_system_message()
+            # Find the index of the system message and update it in current conversation
+            for i, msg in enumerate(conversation_messages):
+                if msg["role"] == "system":
+                    conversation_messages[i] = self.messages[0]
+                    break
+            else:
+                conversation_messages.insert(0, self.messages[0])
+
+            self.console.print(f"\n[cyan]🤖 Flame [Turn {turn_count}] ({model}):[/cyan] ")
+            
+            full_response = ""
+            try:
+                from rich.live import Live
+                with Live(Markdown(""), console=self.console, refresh_per_second=4, transient=False) as live:
+                    for chunk in self.client.chat_stream(conversation_messages, model=model):
+                        if chunk:
+                            full_response += chunk
+                            live.update(Markdown(full_response))
+                
+                if not full_response:
+                    self.console.print("[yellow]Plan execution concluded or empty response.[/yellow]")
+                    break
+            except Exception as e:
+                self.console.print(f"\n[red]Execution Error: {e}[/red]")
+                break
+
+            self.console.print("\n")
+            conversation_messages.append({"role": "assistant", "content": full_response})
+
+            # Process tools
+            tool_results = self.tool_registry.process_text(full_response)
+            
+            if not tool_results:
+                # If the AI stopped calling tools, it might be done
+                # We can ask it if it's finished or if it needs more steps
+                # For now, we'll assume it's done if no tools were called in the last response
+                break
+
+            for name, success, output in tool_results:
+                result_content = f"Tool {name} result:\n{output}" if output is not None else f"Tool {name} executed successfully."
+                if not success:
+                    result_content = f"Tool {name} failed or was rejected:\n{output}"
+                    self.console.print(f"[red]⚠️ Tool '{name}' failed:[/red] {output}")
+                
+                conversation_messages.append({
+                    "role": "user",
+                    "content": result_content
+                })
+
+                if not success and not self.tool_registry.tools[name].auto_approve:
+                    # Halt if a non-auto-approved tool (like run/create/edit) is rejected or fails
+                    # But continue if it's just a read/ls failure (the AI can try again)
+                    turn_count = max_turns # Break outer loop
+                    break
+            
+            # If after processing tools, the last message is from assistant (no tools matched), we break
+            if conversation_messages[-1]["role"] == "assistant":
+                break
 
     def _execute_with_model(self, user_message: str, model: str):
         self.messages.append({"role": "user", "content": user_message})

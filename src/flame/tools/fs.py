@@ -76,3 +76,14 @@ def errors_tool(file_executor):
         auto_approve=True,
         example='/errors path="broken.py"'
     )
+
+def read_lines_tool(file_executor):
+    return Tool(
+        name="read_lines",
+        description="Read specific lines from a file with line numbers (AUTO-APPROVED)",
+        usage='/read_lines path="..." start=... end=...',
+        handler=file_executor.read_file_lines,
+        regex_pattern=r'/read_lines\s+(?:path|filepath|file)?[:=]?\s*["\'](?P<filepath>.*?)["\']\s+(?:start)?[:=]?\s*(?P<start>\d+)\s+(?:end)?[:=]?\s*(?P<end>\d+)',
+        auto_approve=True,
+        example='/read_lines path="main.py" start=10 end=20'
+    )
