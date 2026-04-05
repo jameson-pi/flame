@@ -25,13 +25,13 @@ pip install -r requirements.txt
 # Copy the template
 cp .env.example .env
 
-# Edit .env and add your Hack Club AI API key
+# Edit .env and add your API key
 # Open .env in your editor and update:
-# HACK_CLUB_API_KEY=your_api_key_here
+# FLAME_API_KEY=your_api_key_here
 ```
 
 **Where to get your API key?**
-- Sign up at https://ai.hackclub.com
+- Sign up at https://api.example.com
 - Copy your API key from your dashboard
 - Paste it into `.env`
 
@@ -43,7 +43,7 @@ python main.py --check
 
 Expected output:
 ```
-🔍 Testing connection to Hack Club AI...
+🔍 Testing connection to API...
 ✅ Connection successful!
 ```
 
@@ -63,7 +63,7 @@ You'll see:
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ 🔥 Flame - AI Coding Assistant      ┃
-┃ Powered by Hack Club AI              ┃
+┃ Powered by API              ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Type 'help' for commands, 'exit' to quit
@@ -181,7 +181,7 @@ You: How do I create a git commit message that follows best practices?
 # Check configuration
 cat .env
 
-# Make sure HACK_CLUB_API_KEY is set
+# Make sure FLAME_API_KEY is set
 # Test with verbose output
 python main.py --check --debug
 ```
@@ -226,7 +226,7 @@ Make sure:
 
 Edit configurations in `.env`:
 ```bash
-HACK_CLUB_MODEL=llama2          # Change AI model
+FLAME_MODEL=llama2          # Change AI model
 CLI_THEME=light                 # Change theme
 DEBUG=true                       # Enable debug mode
 ```
@@ -262,7 +262,7 @@ PS C:\flame> python main.py
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ 🔥 Flame - AI Coding Assistant      ┃
-┃ Powered by Hack Club AI              ┃
+┃ Powered by API              ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Type 'help' for commands, 'exit' to quit

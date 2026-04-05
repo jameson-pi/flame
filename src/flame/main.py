@@ -1,4 +1,4 @@
-"""Flame - AI-powered CLI coding assistant with Hack Club AI."""
+"""Flame - AI-powered CLI coding assistant with API."""
 
 import os
 import sys
@@ -8,7 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from rich.console import Console
 
-from flame.api.client import HackClubAIClient
+from flame.api.client import APIClient
 from flame.cli.repl import REPL
 
 
@@ -19,7 +19,7 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser(
-        description="Flame - AI Coding Assistant powered by Hack Club AI",
+        description="Flame - AI Coding Assistant powered by API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -32,7 +32,7 @@ Examples:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Test connection to Hack Club AI API",
+        help="Test connection to API",
     )
     parser.add_argument(
         "--dir",
@@ -44,7 +44,7 @@ Examples:
         "--model",
         type=str,
         default=None,
-        help="AI model to use (overrides HACK_CLUB_MODEL env var)",
+        help="AI model to use (overrides FLAME_MODEL env var)",
     )
     parser.add_argument(
         "--debug",
@@ -58,7 +58,7 @@ Examples:
 
     # Initialize API client
     try:
-        client = HackClubAIClient(
+        client = APIClient(
             model=args.model,
             console=console,
         )
@@ -66,12 +66,12 @@ Examples:
         console.print(f"[red]❌ Configuration Error: {e}[/red]")
         console.print("\n[yellow]Setup Instructions:[/yellow]")
         console.print("1. Copy .env.example to .env")
-        console.print("2. Add your Hack Club AI API key to .env")
+        console.print("2. Add your API key to .env")
         sys.exit(1)
 
     # Check connection if requested
     if args.check:
-        console.print("[cyan]🔍 Testing connection to Hack Club AI...[/cyan]")
+        console.print("[cyan]🔍 Testing connection to API...[/cyan]")
         if client.validate_connection():
             console.print("[green]✅ Connection successful![/green]")
             sys.exit(0)

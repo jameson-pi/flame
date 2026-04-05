@@ -14,7 +14,7 @@ from pygments.lexers import PythonLexer
 from pygments.token import Token
 import re
 
-from flame.api.client import HackClubAIClient
+from flame.api.client import APIClient
 from flame.utils.context import SystemContext
 from flame.cli.executor import FileExecutor, CommandExecutor
 from flame.utils.prompts import SYSTEM_PROMPTS
@@ -27,7 +27,7 @@ class REPL:
 
     def __init__(
         self,
-        api_client: HackClubAIClient,
+        api_client: APIClient,
         working_dir: Optional[str] = None,
         history_file: Optional[str] = None,
     ):
@@ -50,9 +50,7 @@ class REPL:
             
             TECH_WORDS = {
                 'python', 'javascript', 'typescript', 'rust', 'go', 'html', 'css',
-                'api', 'json', 'yaml', 'toml', 'git', 'docker', 'kubernetes',
-                'flame', 'hackclub', 'ai', 'repl', 'cli', 'npm', 'pip', 'venv',
-                'github', 'openrouter', 'gemini', 'deepseek', 'markdown',
+                'flame', 'ai', 'repl', 'cli', 'npm', 'pip', 'venv',
                 'function', 'variable', 'class', 'method', 'import', 'export',
                 'server', 'client', 'database', 'rest', 'graphql', 'ssh'
             }

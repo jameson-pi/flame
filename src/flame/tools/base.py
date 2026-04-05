@@ -55,7 +55,7 @@ class Tool:
         # Clean up keys ending in _simple (internal routing workaround)
         args = {}
         for k, v in raw_args.items():
-            if k in ['q', 'q2', 'q3']:  # Skip internal quote-matching groups
+            if re.match(r'^q\d*$', k):  # Skip internal quote-matching groups
                 continue
             
             val = v

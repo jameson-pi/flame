@@ -3,19 +3,19 @@ import httpx
 from typing import AsyncIterator, Optional
 from rich.console import Console
 
-class AsyncHackClubAIClient:
+class AsyncAPIClient:
     def __init__(
         self,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         model: Optional[str] = None,
     ):
-        self.api_key = api_key or os.getenv("HACK_CLUB_API_KEY")
-        self.base_url = base_url or os.getenv("HACK_CLUB_API_BASE_URL", "https://ai.hackclub.com/proxy/v1")
-        self.model = model or os.getenv("HACK_CLUB_MODEL", "qwen/qwen3-32b")
+        self.api_key = api_key or os.getenv("FLAME_API_KEY")
+        self.base_url = base_url or os.getenv("FLAME_API_BASE_URL", "https://api.example.com/proxy/v1")
+        self.model = model or os.getenv("FLAME_MODEL", "qwen/qwen3-32b")
         
         if not self.api_key:
-            raise ValueError("HACK_CLUB_API_KEY not found.")
+            raise ValueError("FLAME_API_KEY not found.")
 
     async def chat_stream(self, messages: list[dict]) -> AsyncIterator[str]:
         headers = {

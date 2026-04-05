@@ -5,7 +5,7 @@
 - **Python**: 3.10 or higher
 - **pip**: Package manager (comes with Python)
 - **Git** (optional, for version control)
-- **Hack Club AI Account**: Get your API key from https://ai.hackclub.com
+- **API Account**: Get your API key from https://api.example.com
 
 ## Installation Methods
 
@@ -77,7 +77,7 @@ cp .env.example .env
 copy .env.example .env
 
 # Edit .env and add your API key
-# HACK_CLUB_API_KEY=your_api_key_here
+# FLAME_API_KEY=your_api_key_here
 ```
 
 #### Step 4: Validate Setup
@@ -99,13 +99,13 @@ python main.py --check
 
 Expected output:
 ```
-🔍 Testing connection to Hack Club AI...
+🔍 Testing connection to API...
 ✅ Connection successful!
 ```
 
 **If it fails:**
 - Check your `.env` file exists
-- Verify `HACK_CLUB_API_KEY` is correctly set
+- Verify `FLAME_API_KEY` is correctly set
 - Check internet connection
 - Try with `--debug` flag for details
 
@@ -119,7 +119,7 @@ You'll see:
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ 🔥 Flame - AI Coding Assistant      ┃
-┃ Powered by Hack Club AI              ┃
+┃ Powered by API              ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Type 'help' for commands, 'exit' to quit
@@ -143,20 +143,20 @@ You: hello
 # REQUIRED
 # ============================================
 
-# Your Hack Club AI API Key
-# Get it from https://ai.hackclub.com/dashboard
-HACK_CLUB_API_KEY=your_api_key_here
+# Your API Key
+# Get it from https://api.example.com/dashboard
+FLAME_API_KEY=your_api_key_here
 
 # ============================================
 # OPTIONAL (Usually Pre-configured)
 # ============================================
 
-# Hack Club AI API endpoint
-HACK_CLUB_API_BASE_URL=https://ai.hackclub.com/proxy/v1
+# API endpoint
+FLAME_API_BASE_URL=https://api.example.com/proxy/v1
 
 # AI model to use
 # Options: qwen/qwen3-32b (default), llama2, etc.
-HACK_CLUB_MODEL=qwen/qwen3-32b
+FLAME_MODEL=qwen/qwen3-32b
 
 # ============================================
 # OPTIONAL (CLI Settings)
@@ -212,8 +212,8 @@ python -m pip install -r requirements.txt
 
 **Checklist**:
 1. ✅ `.env` file exists
-2. ✅ `HACK_CLUB_API_KEY` is set (not empty)
-3. ✅ API key is valid (check at https://ai.hackclub.com)
+2. ✅ `FLAME_API_KEY` is set (not empty)
+3. ✅ API key is valid (check at https://api.example.com)
 4. ✅ Internet connection working
 5. ✅ Firewall not blocking HTTPS
 
@@ -222,7 +222,7 @@ python -m pip install -r requirements.txt
 python main.py --check --debug
 ```
 
-### Issue: "HACK_CLUB_API_KEY not found"
+### Issue: "FLAME_API_KEY not found"
 
 **Solution**: Create and configure `.env`
 ```bash
@@ -232,7 +232,7 @@ cp .env.example .env
 
 Verify with:
 ```bash
-python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.getenv('HACK_CLUB_API_KEY'))"
+python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.getenv('FLAME_API_KEY'))"
 ```
 
 ### Issue: Virtual Environment Not Activating
@@ -383,10 +383,10 @@ pip --version
 pip list
 
 # Test import
-python -c "from api.client import HackClubAIClient; print('OK')"
+python -c "from api.client import APIClient; print('OK')"
 
 # Check API key
-python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.getenv('HACK_CLUB_API_KEY', 'NOT SET'))"
+python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.getenv('FLAME_API_KEY', 'NOT SET'))"
 ```
 
 ---
@@ -438,7 +438,7 @@ Create `.vscode/settings.json`:
 ## Security Notes
 
 - **Never commit `.env` file**: It's in `.gitignore` for a reason
-- **Never share API keys**: Keep `HACK_CLUB_API_KEY` private
+- **Never share API keys**: Keep `FLAME_API_KEY` private
 - **Review diffs**: Always check file changes before approval
 - **Know your commands**: Dangerous patterns are blocked, but user is responsible
 
@@ -461,7 +461,7 @@ Create `.vscode/settings.json`:
 - **Official Documentation**: [README.md](README.md)
 - **Quick Start**: [QUICKSTART.md](QUICKSTART.md)
 - **Technical Details**: [TECHNICAL.md](TECHNICAL.md)
-- **API Docs**: https://ai.hackclub.com/docs
+- **API Docs**: https://api.example.com/docs
 - **Python Docs**: https://docs.python.org/3/
 
 ---

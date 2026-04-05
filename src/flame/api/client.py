@@ -1,4 +1,4 @@
-"""Hack Club AI API wrapper for streaming and non-streaming responses."""
+"""API wrapper for streaming and non-streaming responses."""
 
 import os
 import time
@@ -8,8 +8,8 @@ from openrouter import OpenRouter
 from rich.console import Console
 
 
-class HackClubAIClient:
-    """Wrapper around OpenRouter SDK for Hack Club AI."""
+class APIClient:
+    """Wrapper around OpenRouter SDK for API."""
 
     def __init__(
         self,
@@ -18,22 +18,22 @@ class HackClubAIClient:
         model: Optional[str] = None,
         console: Optional[Console] = None,
     ):
-        """Initialize the Hack Club AI client.
+        """Initialize the API client.
         
         Args:
-            api_key: API key for Hack Club AI (defaults to HACK_CLUB_API_KEY env var)
-            base_url: API base URL (defaults to HACK_CLUB_API_BASE_URL env var)
-            model: Model name (defaults to HACK_CLUB_MODEL env var)
+            api_key: API key for API (defaults to FLAME_API_KEY env var)
+            base_url: API base URL (defaults to FLAME_API_BASE_URL env var)
+            model: Model name (defaults to FLAME_MODEL env var)
             console: Rich console for output (optional)
         """
-        self.api_key = api_key or os.getenv("HACK_CLUB_API_KEY")
-        self.base_url = base_url or os.getenv("HACK_CLUB_API_BASE_URL", "https://ai.hackclub.com/proxy/v1")
-        self.model = model or os.getenv("HACK_CLUB_MODEL", "google/gemini-3-flash-preview")
+        self.api_key = api_key or os.getenv("FLAME_API_KEY")
+        self.base_url = base_url or os.getenv("FLAME_API_BASE_URL", "https://api.example.com/proxy/v1")
+        self.model = model or os.getenv("FLAME_MODEL", "google/gemini-3-flash-preview")
         self.console = console or Console()
 
         if not self.api_key:
             raise ValueError(
-                "HACK_CLUB_API_KEY not found. Please set it in .env or pass it as an argument."
+                "FLAME_API_KEY not found. Please set it in .env or pass it as an argument."
             )
 
         self.client = OpenRouter(
@@ -48,7 +48,7 @@ class HackClubAIClient:
         max_tokens: int = 2048,
         model: Optional[str] = None,
     ) -> Iterator[str]:
-        """Stream chat response from Hack Club AI.
+        """Stream chat response from API.
         
         Args:
             messages: List of message dicts with 'role' and 'content'
@@ -87,7 +87,7 @@ class HackClubAIClient:
         max_tokens: int = 2048,
         model: Optional[str] = None,
     ) -> str:
-        """Get non-streaming chat response from Hack Club AI.
+        """Get non-streaming chat response from API.
         
         Args:
             messages: List of message dicts with 'role' and 'content'
@@ -140,7 +140,7 @@ class HackClubAIClient:
                     raise last_exception
 
     def validate_connection(self) -> bool:
-        """Test connection to Hack Club AI API.
+        """Test connection to API.
         
         Returns:
             True if connection successful, False otherwise

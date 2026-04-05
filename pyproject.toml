@@ -1,7 +1,7 @@
 [project]
 name = "flame"
 version = "0.1.0"
-description = "AI-powered CLI coding assistant with Hack Club AI"
+description = "AI-powered CLI coding assistant with API"
 requires-python = ">=3.10"
 dependencies = [
     "openrouter>=0.1.0",

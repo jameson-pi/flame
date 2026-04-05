@@ -7,8 +7,28 @@ from pathlib import Path
 from typing import Optional, Tuple
 from difflib import unified_diff
 from rich.console import Console
-from rich.prompt import Confirm
+from rich.prompt import Prompt
 from rich.syntax import Syntax
+
+
+class PermissionManager:
+    """Manages permissions for a single prompt/turn."""
+    auto_approve_all: bool = False
+
+    @classmethod
+    def ask(cls, question: str, default: str = "n") -> bool:
+        """Ask for permission, supporting auto-approve-all."""
+        if cls.auto_approve_all:
+            return True
+        
+        choice = Prompt.ask(f"{question} [y/n/a]", choices=["y", "n", "a"], default=default).lower()
+        if choice == "y":
+            return True
+        elif choice == "n":
+            return False
+        elif choice == "a":
+            cls.auto_approve_all = True
+            return True
 
 
 class FileExecutor:
@@ -69,9 +89,9 @@ class FileExecutor:
         # Check if file exists
         if target_path.exists():
             self.console.print(
-                f"[yellow]⚠️  File already exists: {filepath}[/yellow]"
+                f"[yellow]š  File already exists: {filepath}[/yellow]"
             )
-            if not Confirm.ask("Overwrite?"):
+            if not PermissionManager.ask("Overwrite?", default="n"):
                 return False
 
         # Show preview
@@ -100,7 +120,7 @@ class FileExecutor:
         self.console.print(preview)
         
         # Request approval
-        if not Confirm.ask("\n✅ Create this file?", default=False):
+        if not PermissionManager.ask("\nœ… Create this file?", default="n"):
             return False
 
         # Create parent directories
@@ -157,7 +177,7 @@ class FileExecutor:
         self.console.print(syntax)
         
         # Request approval
-        if not Confirm.ask("\n✅ Apply these changes?", default=False):
+        if not PermissionManager.ask("\nœ… Apply these changes?", default="n"):
             return False
 
         # Write file
@@ -454,11 +474,11 @@ class CommandExecutor:
         self.console.print(f"\n[blue]Command:[/blue]\n   {clean_command}")
 
         if dry_run:
-            self.console.print("\n[yellow]🔄 Dry-run mode (not executing)[/yellow]")
+            self.console.print("\n[yellow]Ÿ”„ Dry-run mode (not executing)[/yellow]")
             return True, None
 
         # Request approval
-        if not Confirm.ask("\n✅ Execute this command?", default=False):
+        if not PermissionManager.ask("\nœ… Execute this command?", default="n"):
             return False, None
 
         try:

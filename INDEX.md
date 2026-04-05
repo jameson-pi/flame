@@ -1,6 +1,6 @@
 # 📚 Flame - Complete Documentation Index
 
-Welcome to **Flame**, an AI-powered CLI coding assistant powered by Hack Club AI! Here's your navigation guide.
+Welcome to **Flame**, an AI-powered CLI coding assistant powered by API! Here's your navigation guide.
 
 ---
 
@@ -24,7 +24,7 @@ Welcome to **Flame**, an AI-powered CLI coding assistant powered by Hack Club AI
 flame/
 ├── 📄 Core Modules
 │   ├── main.py                    # Entry point & CLI initialization
-│   ├── api/client.py              # Hack Club AI API wrapper
+│   ├── api/client.py              # API wrapper
 │   ├── cli/repl.py                # Interactive REPL loop
 │   ├── cli/executor.py            # File & command execution
 │   └── utils/context.py           # System context collector
@@ -160,7 +160,7 @@ flame/
 | Component | Technology |
 |-----------|-----------|
 | **Language** | Python 3.10+ |
-| **API** | Hack Club AI / OpenRouter SDK |
+| **API** | API / OpenRouter SDK |
 | **CLI Framework** | Rich (terminal styling) |
 | **Input** | Prompt Toolkit (history, multiline) |
 | **Config** | python-dotenv |
@@ -190,9 +190,9 @@ python main.py --debug           # Enable debug output
 ```
 
 ### `api/client.py` - API Wrapper
-**Purpose**: Encapsulate Hack Club AI communication
+**Purpose**: Encapsulate API communication
 
-**Key Classes**: `HackClubAIClient`
+**Key Classes**: `APIClient`
 
 **Key Methods**:
 - `chat_stream()` - Stream responses token-by-token
@@ -292,11 +292,11 @@ Layer 5: Runtime Limits
 
 ```env
 # REQUIRED
-HACK_CLUB_API_KEY=your_api_key_here
+FLAME_API_KEY=your_api_key_here
 
 # OPTIONAL (pre-configured defaults)
-HACK_CLUB_API_BASE_URL=https://ai.hackclub.com/proxy/v1
-HACK_CLUB_MODEL=qwen/qwen3-32b
+FLAME_API_BASE_URL=https://api.example.com/proxy/v1
+FLAME_MODEL=qwen/qwen3-32b
 
 # OPTIONAL (CLI settings)
 CLI_THEME=dark
@@ -398,10 +398,10 @@ You: context
 
 ## 📚 External Resources
 
-### Hack Club AI
-- **Website**: https://ai.hackclub.com
-- **API Documentation**: https://ai.hackclub.com/docs
-- **Dashboard**: https://ai.hackclub.com/dashboard
+### API
+- **Website**: https://api.example.com
+- **API Documentation**: https://api.example.com/docs
+- **Dashboard**: https://api.example.com/dashboard
 
 ### Python & Libraries
 - **Python Docs**: https://docs.python.org/3/
@@ -414,10 +414,10 @@ You: context
 ## ❓ FAQ
 
 **Q: How do I get my API key?**
-A: Sign up at https://ai.hackclub.com and copy your key from the dashboard.
+A: Sign up at https://api.example.com and copy your key from the dashboard.
 
 **Q: Can I use a different AI model?**
-A: Yes! Set `HACK_CLUB_MODEL` in `.env` or use `--model` flag.
+A: Yes! Set `FLAME_MODEL` in `.env` or use `--model` flag.
 
 **Q: Is my API key safe?**
 A: Yes! It's stored in `.env` which is gitignored. Never commit it.

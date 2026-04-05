@@ -3,6 +3,7 @@
 from typing import Dict, List, Tuple, Optional
 from rich.console import Console
 from .base import Tool
+from flame.cli.executor import PermissionManager
 
 class ToolRegistry:
     """Registry to manage and dispatch tools."""
@@ -31,6 +32,8 @@ class ToolRegistry:
         Returns:
             List of (tool_name, success, output)
         """
+        PermissionManager.auto_approve_all = False
+        
         all_matches = []
         for name, tool in self.tools.items():
             matches = tool.find_matches(text)

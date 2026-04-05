@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Flame** is a comprehensive AI-powered CLI coding assistant built with Python, integrating the Hack Club AI API for generative capabilities. This document provides technical details about the architecture, implementation patterns, and key design decisions.
+**Flame** is a comprehensive AI-powered CLI coding assistant built with Python, integrating the API for generative capabilities. This document provides technical details about the architecture, implementation patterns, and key design decisions.
 
 ---
 
@@ -41,8 +41,8 @@
         │                             │
         ▼                             ▼
    ┌─────────────────────────────────────────┐
-   │ Hack Club AI API                        │
-   │ (https://ai.hackclub.com/proxy/v1)      │
+   │ API                        │
+   │ (https://api.example.com/proxy/v1)      │
    │ Model: qwen/qwen3-32b                   │
    └─────────────────────────────────────────┘
         │
@@ -88,13 +88,13 @@
 
 ---
 
-### 2. **api/client.py** - Hack Club AI Wrapper
+### 2. **api/client.py** - API Wrapper
 
 **Responsibility**: Encapsulate API communication with streaming and error handling
 
 **Key Classes**:
 
-#### `HackClubAIClient`
+#### `APIClient`
 
 **Methods**:
 - `__init__()`: Initialize with API key, base URL, and model
@@ -719,7 +719,7 @@ print(executor.is_dangerous("pip install"))  # False
 
 ## References
 
-- **Hack Club AI Docs**: https://ai.hackclub.com
+- **API Docs**: https://api.example.com
 - **OpenRouter SDK**: https://github.com/openrouter/openrouter-py
 - **Rich Library**: https://rich.readthedocs.io/
 - **Prompt Toolkit**: https://python-prompt-toolkit.readthedocs.io/

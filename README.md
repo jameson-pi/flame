@@ -1,6 +1,6 @@
 # 🔥 Flame - AI-Powered CLI Coding Assistant
 
-An intelligent command-line interface (CLI) application that functions as an AI coding assistant directly in your terminal, powered by **Hack Club AI**.
+An intelligent command-line interface (CLI) application that functions as an AI coding assistant directly in your terminal, powered by **API**.
 
 ## ✨ Features
 
@@ -17,7 +17,7 @@ An intelligent command-line interface (CLI) application that functions as an AI 
 ### Prerequisites
 
 - Python 3.10+
-- A Hack Club AI API key
+- A API key
 - pip or poetry for dependency management
 
 ### Installation
@@ -50,9 +50,9 @@ An intelligent command-line interface (CLI) application that functions as an AI 
 
 5. **Add your API key to `.env`**:
    ```env
-   HACK_CLUB_API_KEY=your_actual_api_key_here
-   HACK_CLUB_API_BASE_URL=https://ai.hackclub.com/proxy/v1
-   HACK_CLUB_MODEL=qwen/qwen3-32b
+   FLAME_API_KEY=your_actual_api_key_here
+   FLAME_API_BASE_URL=https://api.example.com/proxy/v1
+   FLAME_MODEL=qwen/qwen3-32b
    ```
 
 ### Test Connection
@@ -65,7 +65,7 @@ python main.py --check
 
 Expected output:
 ```
-🔍 Testing connection to Hack Club AI...
+🔍 Testing connection to API...
 ✅ Connection successful!
 ```
 
@@ -79,7 +79,7 @@ You'll see:
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ 🔥 Flame - AI Coding Assistant      ┃
-┃ Powered by Hack Club AI              ┃
+┃ Powered by API              ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Type 'help' for commands, 'exit' to quit
@@ -192,7 +192,7 @@ You: clear
 flame/
 ├── api/
 │   ├── __init__.py
-│   └── client.py          # Hack Club AI API wrapper
+│   └── client.py          # API wrapper
 ├── cli/
 │   ├── __init__.py
 │   ├── repl.py            # Interactive REPL loop
@@ -276,14 +276,14 @@ flame/
 Create a `.env` file from `.env.example`:
 
 ```env
-# Required: Your Hack Club AI API key
-HACK_CLUB_API_KEY=hf_xxxxxxxxxxxxx
+# Required: Your API key
+FLAME_API_KEY=hf_xxxxxxxxxxxxx
 
 # Optional: API endpoint (usually pre-configured)
-HACK_CLUB_API_BASE_URL=https://ai.hackclub.com/proxy/v1
+FLAME_API_BASE_URL=https://api.example.com/proxy/v1
 
 # Optional: AI model to use
-HACK_CLUB_MODEL=qwen/qwen3-32b
+FLAME_MODEL=qwen/qwen3-32b
 
 # Optional: CLI settings
 CLI_THEME=dark
@@ -297,14 +297,14 @@ python main.py --help
 
 usage: main.py [-h] [--version] [--check] [--dir DIR] [--model MODEL] [--debug]
 
-Flame - AI Coding Assistant powered by Hack Club AI
+Flame - AI Coding Assistant powered by API
 
 options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
-  --check               Test connection to Hack Club AI API
+  --check               Test connection to API
   --dir DIR             Working directory (defaults to current directory)
-  --model MODEL         AI model to use (overrides HACK_CLUB_MODEL env var)
+  --model MODEL         AI model to use (overrides FLAME_MODEL env var)
   --debug               Enable debug mode
 ```
 
@@ -348,7 +348,7 @@ options:
 python main.py --model llama2
 
 # Or set in .env:
-HACK_CLUB_MODEL=llama2
+FLAME_MODEL=llama2
 ```
 
 ### Using Different Working Directory
@@ -407,5 +407,5 @@ Need help? Try:
 
 ---
 
-**Made with 🔥 by Hack Club Community**
+**Made with 🔥 by API Community**
 

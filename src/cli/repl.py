@@ -15,7 +15,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.formatted_text import HTML
 
-from api.client import HackClubAIClient
+from api.client import APIClient
 from utils.context import SystemContext
 from cli.executor import FileExecutor, CommandExecutor
 
@@ -25,14 +25,14 @@ class REPL:
 
     def __init__(
         self,
-        api_client: HackClubAIClient,
+        api_client: APIClient,
         working_dir: Optional[str] = None,
         history_file: Optional[str] = None,
     ):
         """Initialize REPL.
         
         Args:
-            api_client: HackClubAIClient instance
+            api_client: APIClient instance
             working_dir: Working directory for file operations
             history_file: Path to save command history
         """
@@ -91,7 +91,7 @@ class REPL:
         self.console.print(
             Panel.fit(
                 "[bold cyan]🔥 Flame - AI Coding Assistant[/bold cyan]\n"
-                "Powered by Hack Club AI",
+                "Powered by API",
                 border_style="cyan",
             )
         )
