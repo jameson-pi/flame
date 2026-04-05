@@ -32,7 +32,20 @@ class Tool:
         """
         if not self.regex:
             return []
-        return [(m.start(), m) for m in self.regex.finditer(text)]
+            
+        valid_matches = []
+        for m in self.regex.finditer(text):
+            # Ensure command is at the start of a line (ignoring whitespace)
+            # This prevents accidental matches within paragraph text (e.g. "tools like /read")
+            match_start = m.start()
+            string_before = text[:match_start]
+            last_newline = string_before.rfind('\n')
+            line_start = string_before[last_newline + 1:] if last_newline != -1 else string_before
+            
+            if not line_start.strip():
+                valid_matches.append((match_start, m))
+                
+        return valid_matches
 
     def execute_match(self, match: re.Match) -> Tuple[bool, str]:
         """Execute the tool for a specific match object."""
