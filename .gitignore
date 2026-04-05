@@ -11,12 +11,4 @@ dist/
 .pytest_cache/
 .vscode/
 .idea/
-
----
-
-### Suggested Next Steps:
-1. **Dependency Management**: I see a `requires.txt`. Would you like me to consolidate those into `pyproject.toml` so you can use `pip install -e .`?
-2. **Async Support**: If your `api/client.py` is synchronous, moving to `httpx` or `aiohttp` would make the REPL feel much more responsive.
-3. **CI/CD**: Would you like me to create a `.github/workflows/tests.yml` to run tests automatically on push?
-
-Which of these would you like to focus on first?
+.env
