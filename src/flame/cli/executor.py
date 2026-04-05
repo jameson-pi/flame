@@ -79,8 +79,19 @@ class FileExecutor:
         if description:
             self.console.print(f"   {description}")
         
+        # Clean up inner content if it looks like it was accidentally wrapped in 'content="..."'
+        # This happens if the AI matches the full keyword group but then the parser extracts it 
+        # as the literal content.
+        clean_content = content
+        content_match = re.match(r'^content=(?P<quote>["\'])(.*)(?P=quote)$', content.strip(), re.DOTALL | re.IGNORECASE)
+        if content_match:
+            clean_content = content_match.group(2)
+        elif (content.startswith('"') and content.endswith('"')) or (content.startswith("'") and content.endswith("'")):
+            # Simple unwrap if it's just quotes
+            clean_content = content[1:-1]
+
         # Show content preview (first 30 lines)
-        lines = content.split("\n")[:30]
+        lines = clean_content.split("\n")[:30]
         preview = "\n".join(lines)
         if len(content.split("\n")) > 30:
             preview += "\n   ... (truncated)"
@@ -96,7 +107,7 @@ class FileExecutor:
         target_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Write file
-        target_path.write_text(content, encoding="utf-8")
+        target_path.write_text(clean_content, encoding="utf-8")
         self.console.print(f"[green]✅ File created: {filepath}[/green]")
         return True
 
@@ -176,9 +187,16 @@ class FileExecutor:
             return f"Error: '{filepath}' is not a file."
 
         try:
+            # Add line limit to prevent context saturation
+            MAX_LINES = 100
             content = target_path.read_text(encoding="utf-8")
+            lines = content.splitlines()
+            if len(lines) > MAX_LINES:
+                lines = lines[:MAX_LINES]
+                lines.append(f"\n... (truncated to first {MAX_LINES} lines)")
+            
             self.console.print(f"[blue]📖 Auto-read file: {filepath}[/blue]")
-            return content
+            return "\n".join(lines)
         except Exception as e:
             return f"Error reading file '{filepath}': {str(e)}"
 
@@ -203,8 +221,15 @@ class FileExecutor:
             return f"Error: '{directory}' is not a directory."
 
         try:
+            MAX_ITEMS = 50
             items = os.listdir(target_path)
             self.console.print(f"[blue]📂 Auto-list directory: {directory}[/blue]")
+            
+            if len(items) > MAX_ITEMS:
+                truncated_items = items[:MAX_ITEMS]
+                truncated_items.append(f"... (truncated to first {MAX_ITEMS} items)")
+                return "\n".join(truncated_items)
+            
             return "\n".join(items)
         except Exception as e:
             return f"Error listing directory '{directory}': {str(e)}"
@@ -292,6 +317,30 @@ class FileExecutor:
         except Exception as e:
             return f"Error checking syntax in {filepath}: {str(e)}"
 
+    def delete_file(self, filepath: str) -> bool:
+        """Delete a file automatically (auto-approved for cleanup).
+
+        Args:
+            filepath: Relative path to file
+
+        Returns:
+            True if deleted, False otherwise
+        """
+        target_path = (self.base_dir / filepath).resolve()
+        if not self._is_path_safe(target_path):
+            self.console.print(f"[red]❌ Security Error: Cannot delete file outside base directory[/red]")
+            return False
+
+        if not target_path.exists():
+            return False
+
+        try:
+            target_path.unlink()
+            self.console.print(f"[blue]🗑️  Auto-deleted file: {filepath}[/blue]")
+            return True
+        except Exception as e:
+            self.console.print(f"[red]❌ Error deleting file '{filepath}': {e}[/red]")
+            return False
 
 class CommandExecutor:
     """Safely execute terminal commands with user approval and safety checks."""
@@ -356,7 +405,14 @@ class CommandExecutor:
         self.console.print(f"\n[cyan]🔧 Run Command:[/cyan]")
         if description:
             self.console.print(f"   {description}")
-        self.console.print(f"\n[blue]Command:[/blue]\n   {command}")
+        
+        # Clean up command string (remove wrapping quotes if both exist)
+        clean_command = command.strip()
+        if (clean_command.startswith('"') and clean_command.endswith('"')) or \
+           (clean_command.startswith("'") and clean_command.endswith("'")):
+            clean_command = clean_command[1:-1].strip()
+
+        self.console.print(f"\n[blue]Command:[/blue]\n   {clean_command}")
 
         if dry_run:
             self.console.print("\n[yellow]🔄 Dry-run mode (not executing)[/yellow]")
@@ -369,7 +425,7 @@ class CommandExecutor:
         try:
             # Execute command
             result = subprocess.run(
-                command,
+                clean_command,
                 shell=True,
                 capture_output=True,
                 text=True,

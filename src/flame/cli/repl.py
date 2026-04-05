@@ -1,8 +1,6 @@
 """Interactive REPL for chat loop with streaming responses."""
 
-import sys
 import os
-import signal
 from pathlib import Path
 from typing import Optional
 from rich.console import Console
@@ -13,12 +11,15 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.formatted_text import HTML
 from pygments.lexers import PythonLexer
+from pygments.token import Token
 import re
 
 from flame.api.client import HackClubAIClient
 from flame.utils.context import SystemContext
 from flame.cli.executor import FileExecutor, CommandExecutor
 from flame.utils.prompts import SYSTEM_PROMPTS
+from flame.tools.registry import ToolRegistry
+from flame.tools import fs, system
 
 
 class REPL:
@@ -33,47 +34,97 @@ class REPL:
         self.client = api_client
         self.console = Console()
         self.working_dir = Path(working_dir or os.getcwd())
-        self.system_context = SystemContext(working_dir=self.working_dir)
-        self.file_executor = FileExecutor(base_dir=self.working_dir, console=self.console)
+        self.system_context = SystemContext(working_dir=str(self.working_dir))
+        self.file_executor = FileExecutor(base_dir=str(self.working_dir), console=self.console)
         self.command_executor = CommandExecutor(console=self.console)
+
+        self.tool_registry = ToolRegistry(console=self.console)
+        self._register_tools()
 
         self.messages = []
         self.add_system_message()
+
+        # Custom Lexer for orange highlighting of tech words, filenames, etc.
+        class TechLexer(PythonLexer):
+            """Extends PythonLexer to highlight tech keywords, filenames, and proper nouns in orange."""
+            
+            TECH_WORDS = {
+                'python', 'javascript', 'typescript', 'rust', 'go', 'html', 'css',
+                'api', 'json', 'yaml', 'toml', 'git', 'docker', 'kubernetes',
+                'flame', 'hackclub', 'ai', 'repl', 'cli', 'npm', 'pip', 'venv',
+                'github', 'openrouter', 'gemini', 'deepseek', 'markdown',
+                'function', 'variable', 'class', 'method', 'import', 'export',
+                'server', 'client', 'database', 'rest', 'graphql', 'ssh'
+            }
+
+            def get_tokens_unprocessed(self, text):
+                for index, token, value in super().get_tokens_unprocessed(text):
+                    # Check for filenames (e.g., file.ext, /path/to/file)
+                    is_filename = re.match(r'^[\w./-]+\.\w+$', value)
+                    # Check for tech words or proper nouns
+                    is_tech = value.lower() in self.TECH_WORDS
+                    
+                    if is_filename or is_tech:
+                        yield index, Token.Name.Entity, value # Token.Name.Entity usually maps to orange/distinct color
+                    else:
+                        yield index, token, value
 
         # Setup persistent history in user home
         history_path = history_file or str(Path.home() / ".flame_history")
         self.prompt_session = PromptSession(
             history=FileHistory(history_path),
-            lexer=PygmentsLexer(PythonLexer),
+            lexer=PygmentsLexer(TechLexer),
         )
+
+    def _register_tools(self):
+        """Register all available tools."""
+        self.tool_registry.register_tool(system.run_command_tool(self.command_executor))
+        self.tool_registry.register_tool(fs.read_file_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.create_file_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.edit_file_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.ls_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.find_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.grep_tool(self.file_executor))
+        self.tool_registry.register_tool(fs.errors_tool(self.file_executor))
 
     def add_system_message(self):
         """Add system context as initial message."""
-        context_prompt = self.system_context.get_context_prompt()
-        base_prompt = SYSTEM_PROMPTS.get("default")
+        # Remove any existing system messages to avoid duplicates
+        self.messages = [m for m in self.messages if m.get("role") != "system"]
         
-        self.messages.append({
+        context_prompt = self.system_context.get_context_prompt()
+        base_prompt = SYSTEM_PROMPTS.get("base") or SYSTEM_PROMPTS.get("default")
+        commands_help = self.tool_registry.get_system_prompt_fragment()
+        
+        self.messages.insert(0, {
             "role": "system",
             "content": (
                 f"{base_prompt}\n\n"
                 f"{context_prompt}\n\n"
                 "CRITICAL: You are an agent that can interact with the filesystem.\n"
-                "COMMANDS AVAILABLE:\n"
-                "1. /run command=\"...\" - Execute shell command (requires permission)\n"
-                "2. /create path=\"...\" content=\"...\" - Create a new file (requires permission)\n"
-                "3. /edit path=\"...\" old_content=\"...\" new_content=\"...\" - Edit a file (requires permission)\n"
-                "4. /read path=\"...\" - Read file content (AUTO-APPROVED)\n"
-                "5. /ls directory=\"...\" - List directory items (AUTO-APPROVED)\n"
-                "6. /find pattern=\"...\" - Find files by glob pattern (AUTO-APPROVED)\n"
-                "7. /grep query=\"...\" pattern=\"...\" - Search text in files (AUTO-APPROVED)\n"
-                "8. /errors path=\"...\" - Check Python syntax errors (AUTO-APPROVED)\n"
+                f"{commands_help}"
             ),
         })
 
     def print_welcome(self):
+        ascii_art = r"""
+[bold orange1].------------------------------------------.
+|                                          |
+|   (      (                  *            |
+|   )\ )   )\ )     (       (  `           |
+|  (()/(  (()/(     )\      )\))(    (     |
+|   /(_))  /(_)) ((((_)(   ((_)()\   )\    |
+|  (_))_| (_))    )\ _ )\  (_()((_) ((_)   |
+|  | |_   | |     (_)_\(_) |  \/  | | __|  |
+|  | __|  | |__    / _ \   | |\/| | | _|   |
+|  |_|    |____|  /_/ \_\  |_|  |_| |___|  |
+|                                          |
+'------------------------------------------'[/bold orange1]
+"""
+        self.console.print(ascii_art)
         self.console.print(
             Panel.fit(
-                "[bold cyan]🔥 Flame AI Refactored[/bold cyan]\n"
+                "[bold cyan]🔥 Flame AI Refactored\n[/bold cyan]"
                 "[dim]Syntax highlighting enabled (Python style). Press Alt+Enter for new line.[/dim]",
                 border_style="cyan",
             )
@@ -90,16 +141,73 @@ class REPL:
         return user_input
 
     def run_conversation_step(self, user_message: str):
+        # Multi-model evaluation and planning
+        # 1. Evaluation with google/gemini-3-flash-preview
+        eval_messages = self.messages + [{"role": "user", "content": f"User request: {user_message}\nDoes this request require multiple steps or a plan? Respond with YES or NO only."}]
+        needs_plan_raw = self.client.chat_complete(eval_messages, model="google/gemini-3-flash-preview")
+        needs_plan = needs_plan_raw.strip().upper()
+
+        if "YES" in needs_plan:
+            self.console.print("[yellow]🧠 Complex request detected, generating plan...[/yellow]")
+            plan_messages = self.messages + [{"role": "user", "content": f"User request: {user_message}\nGenerate a definitive PLAN.md for this task. Focus on technical steps."}]
+            plan_content = self.client.chat_complete(plan_messages, model="google/gemini-3-flash-preview")
+            
+            # Save the plan in .flame directory with timestamp
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            plan_dir = self.working_dir / ".flame"
+            plan_dir.mkdir(exist_ok=True)
+            plan_filename = f"PLAN_{timestamp}.md"
+            plan_path = plan_dir / plan_filename
+            
+            plan_path.write_text(plan_content, encoding="utf-8")
+            self.console.print(f"[green]✅ Plan saved to {plan_path.relative_to(self.working_dir)}[/green]")
+            
+            # Show the plan in the console
+            self.console.print("\n[bold cyan]📋 Generated Plan:[/bold cyan]")
+            self.console.print(Panel(Markdown(plan_content), border_style="cyan"))
+            self.console.print("\n")
+            
+            # Inject plan into context
+            self.system_context.inject_snippet(f"Current Plan ({plan_filename})", plan_content)
+            self.add_system_message() # Refresh system message with snippet
+
+            # Add the plan generation itself to the message history to give model grounding
+            self.messages.append({"role": "assistant", "content": f"I have generated a plan and saved it to {plan_filename}:\n\n{plan_content}"})
+
+            # Now use gemini-3-flash-preview to execute the plan
+            execution_prompt = f"Executing plan from {plan_filename} to fulfill user request: {user_message}\n\nPlease proceed with the steps defined in the plan using your tools."
+            self._execute_with_model(execution_prompt, model="google/gemini-3-flash-preview")
+            
+            # Cleanup
+            self.system_context.remove_snippet(f"Current Plan ({plan_filename})")
+            # We keep the plan file in .flame for history, or delete it if preferred. 
+            # The user just asked to change WHERE it is saved and the NAME.
+        else:
+            # Normal execution with gemini-3-flash-preview
+            self._execute_with_model(user_message, model="google/gemini-3-flash-preview")
+
+    def _execute_with_model(self, user_message: str, model: str):
         self.messages.append({"role": "user", "content": user_message})
         
         while True:
-            self.console.print("\n[cyan]🤖 Flame:[/cyan] ", end="")
+            # Clear console markers for tools if any
+            self.console.print(f"\n[cyan]🤖 Flame ({model}):[/cyan] ")
 
             full_response = ""
             try:
-                for chunk in self.client.chat_stream(self.messages):
-                    full_response += chunk
-                    self.console.print(chunk, end="", highlight=False)
+                from rich.live import Live
+                # Use a simpler Live setup to avoid potential display issues on some Windows terminals
+                with Live(Markdown(""), console=self.console, refresh_per_second=4, transient=False) as live:
+                    for chunk in self.client.chat_stream(self.messages, model=model):
+                        if chunk:
+                            full_response += chunk
+                            live.update(Markdown(full_response))
+                
+                # If for some reason full_response is empty but no exception was raised
+                if not full_response:
+                    self.console.print("[yellow]Empty response received from AI.[/yellow]")
+                    break
             except Exception as e:
                 self.console.print(f"\n[red]Error: {e}[/red]")
                 return
@@ -107,113 +215,32 @@ class REPL:
             self.console.print("\n")
             self.messages.append({"role": "assistant", "content": full_response})
 
-            # Look for commands in the response
-            # Format: /run command="...", /create path="...", content="..." etc.
-            # Simplified regex for demo purposes, can be improved
-            command_found = False
+            # Process tools using ToolRegistry
+            tool_results = self.tool_registry.process_text(full_response)
             
-            # Check for /run command="..."
-            run_match = re.search(r'/run\s+(?:shell_command|command)=["\'](.*?)["\']', full_response)
-            if not run_match:
-                # Try simpler format if agent uses it
-                run_match = re.search(r'/run\s+(.*)', full_response)
+            if not tool_results:
+                break
 
-            if run_match:
-                cmd = run_match.group(1).strip().strip('"').strip("'")
-                success, output = self.command_executor.suggest_command(cmd)
-                if success:
-                    self.messages.append({
-                        "role": "user",
-                        "content": f"Command output:\n{output}" if output else "Command executed successfully (no output)."
-                    })
-                    command_found = True
-
-            # Check for /read path="..."
-            read_match = re.search(r'/read\s+(?:path|filepath|file)=["\'](.*?)["\']', full_response)
-            if not read_match:
-                read_match = re.search(r'/read\s+(.*)', full_response)
-            
-            if read_match:
-                filepath = read_match.group(1).strip().strip('"').strip("'")
-                content = self.file_executor.read_file(filepath)
+            for name, success, output in tool_results:
+                # If tool was successful, we tell the AI and the loop continues
+                # If it failed or was rejected, we should also inform the AI
+                result_content = f"Tool {name} result:\n{output}" if output is not None else f"Tool {name} executed successfully."
+                if not success:
+                    result_content = f"Tool {name} failed or was rejected:\n{output}"
+                    self.console.print(f"[red]⚠️ Tool '{name}' failed:[/red] {output}")
+                
                 self.messages.append({
                     "role": "user",
-                    "content": f"Content of {filepath}:\n\n{content}"
+                    "content": result_content
                 })
-                command_found = True
 
-            # Check for /create path="..." content="..."
-            create_match = re.search(r'/create\s+(?:path|filepath|file)=["\'](.*?)["\'](?:\s+content=["\'](.*?)["\'])?', full_response, re.DOTALL)
-            if not create_match:
-                create_match = re.search(r'/create\s+([^\s]+)\s+(.*)', full_response, re.DOTALL)
+                if not success:
+                    # Halt further execution if a tool in the sequence fails
+                    break
 
-            if create_match:
-                filepath = create_match.group(1).strip().strip('"').strip("'")
-                content = create_match.group(2).strip().strip('"').strip("'") if create_match.lastindex >= 2 else ""
-                success = self.file_executor.suggest_file_creation(filepath, content)
-                if success:
-                    self.messages.append({
-                        "role": "user",
-                        "content": f"File {filepath} created successfully."
-                    })
-                    command_found = True
-
-            # Check for /edit path="..." old_content="..." new_content="..."
-            edit_match = re.search(r'/edit\s+(?:path|filepath|file)=["\'](.*?)["\']\s+old_content=["\'](.*?)["\']\s+new_content=["\'](.*?)["\']', full_response, re.DOTALL)
-            if edit_match:
-                filepath = edit_match.group(1).strip().strip('"').strip("'")
-                old_c = edit_match.group(2).strip().strip('"').strip("'")
-                new_c = edit_match.group(3).strip().strip('"').strip("'")
-                success = self.file_executor.suggest_file_edit(filepath, old_c, new_c)
-                if success:
-                    self.messages.append({
-                        "role": "user",
-                        "content": f"File {filepath} edited successfully."
-                    })
-                    command_found = True
-
-            # Check for /ls directory="..."
-            ls_match = re.search(r'/ls\s+(?:directory|dir)=["\'](.*?)["\']', full_response)
-            if not ls_match:
-                ls_match = re.search(r'/ls\s+(.*)', full_response)
-            if ls_match:
-                directory = ls_match.group(1).strip().strip('"').strip("'") or "."
-                output = self.file_executor.list_dir(directory)
-                self.messages.append({"role": "user", "content": f"Directory listing of {directory}:\n{output}"})
-                command_found = True
-
-            # Check for /find pattern="..."
-            find_match = re.search(r'/find\s+pattern=["\'](.*?)["\']', full_response)
-            if not find_match:
-                find_match = re.search(r'/find\s+(.*)', full_response)
-            if find_match:
-                pattern = find_match.group(1).strip().strip('"').strip("'")
-                output = self.file_executor.find_files(pattern)
-                self.messages.append({"role": "user", "content": f"Find results for {pattern}:\n{output}"})
-                command_found = True
-
-            # Check for /grep query="..." pattern="..."
-            grep_match = re.search(r'/grep\s+query=["\'](.*?)["\'](?:\s+pattern=["\'](.*?)["\'])?', full_response)
-            if grep_match:
-                query = grep_match.group(1).strip().strip('"').strip("'")
-                pattern = grep_match.group(2).strip().strip('"').strip("'") if grep_match.lastindex >= 2 else "*"
-                output = self.file_executor.grep_search(query, pattern)
-                self.messages.append({"role": "user", "content": f"Grep results for '{query}' in {pattern}:\n{output}"})
-                command_found = True
-
-            # Check for /errors path="..."
-            errors_match = re.search(r'/errors\s+(?:path|filepath|file)=["\'](.*?)["\']', full_response)
-            if not errors_match:
-                errors_match = re.search(r'/errors\s+(.*)', full_response)
-            if errors_match:
-                filepath = errors_match.group(1).strip().strip('"').strip("'")
-                output = self.file_executor.get_errors(filepath)
-                self.messages.append({"role": "user", "content": f"Error check for {filepath}:\n{output}"})
-                command_found = True
-
-            # If no command was executed, break the loop
-            if not command_found:
-                break
+            # After processing all tools in this response, refresh the system prompt
+            # so the model sees the updated project structure/context in the next turn.
+            self.add_system_message()
 
     def run(self):
         self.print_welcome()

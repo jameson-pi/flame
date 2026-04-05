@@ -4,8 +4,9 @@ import os
 import platform
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional
 from rich.console import Console
+import pathspec
 
 
 class SystemContext:
@@ -19,6 +20,43 @@ class SystemContext:
         """
         self.working_dir = Path(working_dir or os.getcwd())
         self.console = Console()
+        self.gitignore = self._load_gitignore()
+        self.snippets: Dict[str, str] = {}
+
+    def _load_gitignore(self) -> Optional[pathspec.PathSpec]:
+        """Load and parse .gitignore file if it exists."""
+        gitignore_path = self.working_dir / ".gitignore"
+        if gitignore_path.exists():
+            try:
+                with open(gitignore_path, 'r', encoding='utf-8') as f:
+                    return pathspec.PathSpec.from_lines('gitwildmatch', f)
+            except Exception:
+                pass
+        return None
+
+    def inject_snippet(self, name: str, content: str):
+        """Add a dynamic context snippet (e.g., current file content)."""
+        self.snippets[name] = content
+
+    def remove_snippet(self, name: str):
+        """Remove a dynamic context snippet."""
+        if name in self.snippets:
+            del self.snippets[name]
+
+    def _is_ignored(self, path: Path) -> bool:
+        """Check if a path is ignored by .gitignore."""
+        if not self.gitignore:
+            return False
+        
+        # Get relative path for matching
+        try:
+            rel_path = str(path.relative_to(self.working_dir))
+            # pathspec expects directories to end with / if matching directory patterns
+            if path.is_dir() and not rel_path.endswith('/'):
+                rel_path += '/'
+            return self.gitignore.match_file(rel_path)
+        except ValueError:
+            return False
 
     def get_os_info(self) -> str:
         """Get OS and Python version information."""
@@ -56,9 +94,10 @@ class SystemContext:
             items = []
             try:
                 entries = sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name))
-                # Skip hidden dirs and common ignore patterns
+                # Skip hidden dirs, common ignore patterns, AND gitignored files
                 entries = [e for e in entries if not e.name.startswith(".") 
-                          and e.name not in {"__pycache__", "node_modules", "venv", ".venv"}]
+                          and e.name not in {"__pycache__", "node_modules", "venv", ".venv"}
+                          and not self._is_ignored(e)]
                 
                 for i, entry in enumerate(entries[:10]):  # Limit to 10 entries per dir
                     is_last = i == len(entries) - 1
@@ -84,7 +123,8 @@ class SystemContext:
         
         try:
             for path in self.working_dir.rglob("*"):
-                if path.is_file() and not path.parts[-1].startswith("."):
+                # Skip directories and files that should be ignored
+                if path.is_file() and not path.parts[-1].startswith(".") and not self._is_ignored(path):
                     ext = path.suffix or "no_ext"
                     extensions[ext] = extensions.get(ext, 0) + 1
                     total += 1
@@ -112,6 +152,11 @@ class SystemContext:
         if git_status:
             context_parts.insert(4, f"\n🌿 Git Status:\n{git_status}")
         
+        if self.snippets:
+            context_parts.append("\n📝 Active Context Snippets:")
+            for name, content in self.snippets.items():
+                context_parts.append(f"--- {name} ---\n{content}\n--- End Snippet ---")
+        
         return "\n".join(context_parts)
 
     def get_context_prompt(self) -> str:
@@ -121,4 +166,3 @@ class SystemContext:
             f"{self.get_full_context()}\n\n"
             f"Use this context to provide accurate, contextual assistance."
         )
-

@@ -12,3 +12,6 @@ dist/
 .vscode/
 .idea/
 .env
+.venv/
+node_modules/
+.flame
