@@ -18,16 +18,19 @@ pip install flamecli
 
 ## Step 2: Configure API Key
 
+Run the built-in setup command:
+
 ```bash
-# Create a .env file and add your API key
-# Open .env in your editor and update:
-# FLAME_API_KEY=your_api_key_here
+flame --setup
 ```
+
+It will ask you to enter:
+1. `FLAME_API_KEY`: Your API key.
+2. `FLAME_MODEL`: Defaults to the recommended `qwen/qwen3-32b` if you skip it.
 
 **Where to get your API key?**
 - Get your API key from openrouter or your preferred provider
 - Copy your API key from your dashboard
-- Paste it into `.env`
 
 ## Step 3: Verify Setup
 
@@ -106,3 +109,4 @@ black>=23.0.0
 ✅ Create this file? [y/n]: y
 ... 
 ```
+

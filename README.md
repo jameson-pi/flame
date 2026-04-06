@@ -29,8 +29,8 @@ An intelligent command-line interface (CLI) application that functions as an AI 
 
 2. **Setup configuration**:
    ```bash
-   # Create a .env file in your working directory
-   echo "FLAME_API_KEY=your_actual_api_key_here" > .env
+   # Interactively securely configure your API key and preferences
+   flame --setup
    ```
 
 ### Test Connection
@@ -281,6 +281,7 @@ options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
   --check               Test connection to API
+  --setup               Interactive setup to configure your API key and settings
   --dir DIR             Working directory (defaults to current directory)
   --model MODEL         AI model to use (overrides FLAME_MODEL env var)
   --debug               Enable debug mode
@@ -386,3 +387,4 @@ Need help? Try:
 ---
 
 **Made with 🔥 by API Community**
+

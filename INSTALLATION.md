@@ -38,11 +38,13 @@ pip install flamecli
 
 ### 1. Configure your API key
 
-Flame requires an API key to function. The easiest way is to set it in a `.env` file in the folder you launch it from:
+Flame requires an API key to function. The easiest way is to set it interactively via the built-in setup command:
 
 ```bash
-echo "FLAME_API_KEY=your_api_key_here" > .env
+flame --setup
 ```
+
+This command will ask for your API key and AI model preference, and automatically create a `.env` file in your directory to securely store them.
 
 Verify it works by running:
 
@@ -136,3 +138,4 @@ As Flame is available on PyPI, you can update it to the latest version by runnin
 ```bash
 pip install --upgrade flamecli
 ```
+

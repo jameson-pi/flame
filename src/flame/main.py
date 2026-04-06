@@ -35,6 +35,11 @@ Examples:
         help="Test connection to API",
     )
     parser.add_argument(
+        "--setup",
+        action="store_true",
+        help="Interactive setup to configure your API key and settings",
+    )
+    parser.add_argument(
         "--dir",
         type=str,
         default=None,
@@ -56,6 +61,46 @@ Examples:
 
     console = Console()
 
+    if args.setup:
+        console.print("[bold cyan]🔥 Flame Interactive Setup[/bold cyan]")
+        console.print("This will create a .env file in your current directory with your settings.\n")
+        api_key = input("Enter your API Key: ").strip()
+        
+        if not api_key:
+            console.print("[red]❌ Setup cancelled: API key cannot be empty.[/red]")
+            sys.exit(1)
+            
+        model = input("Enter preferred model (press Enter for default 'qwen/qwen3-32b'): ").strip()
+        
+        env_path = Path(".env")
+        env_content = []
+        if env_path.exists():
+            env_content = env_path.read_text(encoding="utf-8").splitlines()
+            
+        # Basic replacement or append
+        new_env = []
+        key_found = False
+        model_found = False
+        for line in env_content:
+            if line.startswith("FLAME_API_KEY="):
+                new_env.append(f"FLAME_API_KEY={api_key}")
+                key_found = True
+            elif line.startswith("FLAME_MODEL=") and model:
+                new_env.append(f"FLAME_MODEL={model}")
+                model_found = True
+            else:
+                new_env.append(line)
+                
+        if not key_found:
+            new_env.append(f"FLAME_API_KEY={api_key}")
+        if model and not model_found:
+            new_env.append(f"FLAME_MODEL={model}")
+            
+        env_path.write_text("\n".join(new_env) + "\n", encoding="utf-8")
+        console.print("\n[green]✅ Setup complete! Settings saved to .env[/green]")
+        console.print("Run [bold cyan]flame[/bold cyan] to start chatting!")
+        sys.exit(0)
+
     # Initialize API client
     try:
         client = APIClient(
@@ -65,8 +110,7 @@ Examples:
     except ValueError as e:
         console.print(f"[red]❌ Configuration Error: {e}[/red]")
         console.print("\n[yellow]Setup Instructions:[/yellow]")
-        console.print("1. Copy .env.example to .env")
-        console.print("2. Add your API key to .env")
+        console.print("Run [bold cyan]flame --setup[/bold cyan] to configure your API key interactively.")
         sys.exit(1)
 
     # Check connection if requested
