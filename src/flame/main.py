@@ -119,6 +119,21 @@ Examples:
         if model and not model_found:
             new_env.append(f"FLAME_MODEL={model}")
             
+        # Add CLI defaults if they don't exist
+        cli_defaults = {
+            "CLI_THEME": "dark",
+            "CLI_STREAM_SPEED": "normal",
+            "DEBUG": "false"
+        }
+        
+        current_keys = [line.split('=')[0] for line in new_env if '=' in line]
+        
+        if not any(k in current_keys for k in cli_defaults.keys()):
+            new_env.append("\n# CLI Configuration")
+            for k, v in cli_defaults.items():
+                if k not in current_keys:
+                    new_env.append(f"{k}={v}")
+            
         setup_env_path.write_text("\n".join(new_env) + "\n", encoding="utf-8")
         console.print(f"\n[green]✅ Setup complete! Settings saved to {setup_env_path}[/green]")
         console.print("Run [bold cyan]flame[/bold cyan] to start chatting!")
