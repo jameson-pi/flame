@@ -22,37 +22,15 @@ An intelligent command-line interface (CLI) application that functions as an AI 
 
 ### Installation
 
-1. **Clone or navigate to the project**:
+1. **Install via pip** (recommended to use a virtual environment):
    ```bash
-   cd flame
+   pip install flamecli
    ```
 
-2. **Create a virtual environment** (recommended):
+2. **Setup configuration**:
    ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   # OR if using pyproject.toml:
-   pip install -e .
-   ```
-
-4. **Setup configuration**:
-   ```bash
-   cp .env.example .env
-   ```
-
-5. **Add your API key to `.env`**:
-   ```env
-   FLAME_API_KEY=your_actual_api_key_here
-   FLAME_API_BASE_URL=https://api.example.com/proxy/v1
-   FLAME_MODEL=qwen/qwen3-32b
+   # Create a .env file in your working directory
+   echo "FLAME_API_KEY=your_actual_api_key_here" > .env
    ```
 
 ### Test Connection
@@ -60,7 +38,7 @@ An intelligent command-line interface (CLI) application that functions as an AI 
 Before running the REPL, verify your setup:
 
 ```bash
-python main.py --check
+flame --check
 ```
 
 Expected output:
@@ -72,7 +50,7 @@ Expected output:
 ### Start the CLI
 
 ```bash
-python main.py
+flame
 ```
 
 You'll see:
@@ -408,4 +386,3 @@ Need help? Try:
 ---
 
 **Made with 🔥 by API Community**
-
