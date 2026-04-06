@@ -122,16 +122,21 @@ class SystemContext:
         total = 0
         
         try:
-            for path in self.working_dir.rglob("*"):
-                # Skip directories and files that should be ignored
-                if path.is_file() and not path.parts[-1].startswith(".") and not self._is_ignored(path):
+            # Avoid rglob("*") in potentially huge directories like user home
+            # Instead, just walk the top level or a small subset
+            # For now, let's limit it to one level deeep or skip in huge dirs
+            for path in self.working_dir.iterdir():
+                if path.is_file() and not path.name.startswith(".") and not self._is_ignored(path):
                     ext = path.suffix or "no_ext"
                     extensions[ext] = extensions.get(ext, 0) + 1
                     total += 1
+                elif path.is_dir() and not path.name.startswith(".") and not self._is_ignored(path):
+                    # For directories, maybe just count them?
+                    pass
         except PermissionError:
             pass
         
-        summary = f"Total files: {total}\n"
+        summary = f"Total top-level files: {total}\n"
         for ext, count in sorted(extensions.items(), key=lambda x: x[1], reverse=True)[:5]:
             summary += f"  {ext}: {count}\n"
         

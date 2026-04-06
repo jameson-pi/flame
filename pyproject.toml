@@ -1,6 +1,6 @@
 [project]
 name = "flamecli"
-version = "0.1.2"
+version = "0.1.8"
 authors = [
   { name="Jameson Piscitello", email="piscitello284@gmail.com" },
 ]
@@ -21,6 +21,7 @@ dependencies = [
     "httpx>=0.27.0",
     "pathspec>=1.0.4",
     "pygments>=2.13.0",
+    "executor>=23.2",
 ]
 
 [project.scripts]

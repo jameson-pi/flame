@@ -150,6 +150,8 @@ Examples:
         console.print("\n[yellow]Setup Instructions:[/yellow]")
         console.print("Run [bold cyan]flame --setup[/bold cyan] to configure your API key interactively.")
         sys.exit(1)
+    except Exception as e:
+        console.print("Exception occurred during API client initialization:", e)
 
     # Check connection if requested
     if args.check:
@@ -169,10 +171,12 @@ Examples:
 
     # Start REPL
     try:
+        console.print("Initializing REPL...")
         repl = REPL(
             api_client=client,
             working_dir=working_dir,
         )
+
         repl.run()
     except KeyboardInterrupt:
         pass

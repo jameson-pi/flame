@@ -1,16 +1,17 @@
 # 🔥 Flame - AI-Powered CLI Coding Assistant
 
-An intelligent command-line interface (CLI) application that functions as an AI coding assistant directly in your terminal, powered by **API**.
+An intelligent command-line interface (CLI) application that functions as an AI coding assistant directly in your terminal, powered by **your choice of API**.
 
 ## ✨ Features
 
-- **Interactive REPL**: Continuous chat loop with full conversation context
-- **System Awareness**: Automatically gathers context about your environment (OS, project structure, git status)
-- **Real-time Streaming**: Responses stream into the terminal as they're generated
-- **Safe File Operations**: Create and edit files with intelligent diff preview and approval prompts
-- **Command Execution**: Suggest and safely execute terminal commands with user approval
-- **Dangerous Command Detection**: Blocks potentially harmful commands while allowing safe ones
-- **Multi-turn Conversations**: Maintains full chat history across sessions
+- **Interactive REPL**: Continuous chat loop with full conversation context.
+- **System Awareness**: Automatically gathers context about your environment (OS, project structure, git status, etc.).
+- **Global Configuration**: Persistent settings (API key, model, etc.) stored globally in `~/.flame/.env`.
+- **Real-time Streaming**: Responses stream directly into your terminal for a responsive experience.
+- **Safe File Operations**: Create and edit files with intelligent diff previews and explicit user approval.
+- **Terminal Execution**: Command suggestions that you can execute safely with a single keypress.
+- **Security First**: Dangerous command detection and path validation protect your system.
+- **Multi-turn Logic**: Full chat history maintenance for complex workflow handling.
 
 ## 🚀 Quick Start
 
@@ -22,14 +23,15 @@ An intelligent command-line interface (CLI) application that functions as an AI 
 
 ### Installation
 
-1. **Install via pip** (recommended to use a virtual environment):
+1. **Install via pip**:
    ```bash
    pip install flamecli
    ```
 
 2. **Setup configuration**:
    ```bash
-   # Interactively securely configure your API key and preferences
+   # Run the interactive setup to configure your API key, base URL, and model.
+   # This will save your settings globally in ~/.flame/.env
    flame --setup
    ```
 
@@ -53,17 +55,7 @@ Expected output:
 flame
 ```
 
-You'll see:
-```
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ 🔥 Flame - AI Coding Assistant      ┃
-┃ Powered by API              ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-Type 'help' for commands, 'exit' to quit
-
-You: _
-```
+Happy coding! 🔥
 
 ## 💬 Usage Examples
 
@@ -202,12 +194,12 @@ flame/
         ┌──────┴──────┬────────────┐
         ▼             ▼            ▼
    ┌────────┐   ┌──────────┐  ┌─────────┐
-   │HackClubAI API    │   │FileExecutor │ │CommandExecutor
-   │(api/client.py)   │   │(executor.py)│ │(executor.py)
-   │                  │   │             │ │
-   │• Streaming       │   │• Safe file  │ │• Command checks
-   │• Non-streaming   │   │  ops        │ │• Approval prompts
-   │• Error handling  │   │• Diffs      │ │• History
+   │ API    │   │FileExecutor │ │CommandExecutor
+   │ Client │   │(executor.py)│ │(executor.py)
+   │        │   │             │ │
+   │• Stream │   │• Safe file  │ │• Command checks
+   │• Validate│   │  ops        │ │• Approval prompts
+   │• Async   │   │• Diffs      │ │• History
    └────────┬────────┘   └──────────────┘ └─────────────┘
             │
       SystemContext
@@ -251,20 +243,21 @@ flame/
 
 ### Environment Variables
 
-Create a `.env` file from `.env.example`:
+Flame uses a `.env` file for configuration. The `--setup` command handles this for you, but you can also manually edit the file at `~/.flame/.env`.
 
 ```env
 # Required: Your API key
-FLAME_API_KEY=hf_xxxxxxxxxxxxx
+FLAME_API_KEY=your_key_here
 
-# Optional: API endpoint (usually pre-configured)
-FLAME_API_BASE_URL=https://api.example.com/proxy/v1
+# Optional: API endpoint (defaults to a standard proxy)
+FLAME_API_BASE_URL=https://api.example.com/v1
 
-# Optional: AI model to use
-FLAME_MODEL=qwen/qwen3-32b
+# AI model to use
+FLAME_MODEL=google/gemini-3-flash-preview
 
-# Optional: CLI settings
+# CLI settings
 CLI_THEME=dark
+CLI_STREAM_SPEED=normal
 DEBUG=false
 ```
 
@@ -387,4 +380,3 @@ Need help? Try:
 ---
 
 **Made with 🔥 by API Community**
-

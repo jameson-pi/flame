@@ -33,8 +33,11 @@ class REPL:
     ):
         self.client = api_client
         self.console = Console()
+        
         self.working_dir = Path(working_dir or os.getcwd())
+        
         self.system_context = SystemContext(working_dir=str(self.working_dir))
+        
         self.file_executor = FileExecutor(base_dir=str(self.working_dir), console=self.console)
         self.command_executor = CommandExecutor(console=self.console)
 
@@ -69,10 +72,13 @@ class REPL:
 
         # Setup persistent history in user home
         history_path = history_file or str(Path.home() / ".flame_history")
-        self.prompt_session = PromptSession(
-            history=FileHistory(history_path),
-            lexer=PygmentsLexer(TechLexer),
-        )
+        try:
+            self.prompt_session = PromptSession(
+                history=FileHistory(history_path),
+                lexer=PygmentsLexer(TechLexer),
+            )
+        except Exception:
+            self.prompt_session = PromptSession(lexer=PygmentsLexer(TechLexer))
 
     def _register_tools(self):
         """Register all available tools."""
@@ -337,6 +343,11 @@ class REPL:
                 if processed:
                     self.run_conversation_step(processed)
 
-            except (KeyboardInterrupt, EOFError):
+            except KeyboardInterrupt:
                 self.console.print("\n[yellow]Goodbye![/yellow]")
                 break
+            except EOFError:
+                self.console.print("\n[yellow]Goodbye![/yellow]")
+                break
+            except Exception as e:
+                self.console.print(f"\n[red]Error: {e}[/red]")
