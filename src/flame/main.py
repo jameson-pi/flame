@@ -14,8 +14,21 @@ from flame.cli.repl import REPL
 
 def main():
     """Main entry point for Flame CLI."""
-    # Load environment variables
-    load_dotenv()
+    # Define home directory config path
+    home_config_dir = Path.home() / ".flame"
+    home_env_path = home_config_dir / ".env"
+
+    # Create directory if it doesn't exist
+    if not home_config_dir.exists():
+        try:
+            home_config_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+
+    # Load environment variables (prefer current dir .env, then home dir)
+    load_dotenv()  # Local directory
+    if home_env_path.exists():
+        load_dotenv(dotenv_path=home_env_path)
 
     # Parse arguments
     parser = argparse.ArgumentParser(
@@ -63,19 +76,22 @@ Examples:
 
     if args.setup:
         console.print("[bold cyan]🔥 Flame Interactive Setup[/bold cyan]")
-        console.print("This will create a .env file in your current directory with your settings.\n")
+        console.print("This will create a .env file in your ~/.flame/ directory with your settings.\n")
         api_key = input("Enter your API Key: ").strip()
         
         if not api_key:
             console.print("[red]❌ Setup cancelled: API key cannot be empty.[/red]")
             sys.exit(1)
             
-        model = input("Enter preferred model (press Enter for default 'qwen/qwen3-32b'): ").strip()
+        model = input("Enter preferred model (press Enter for default 'google/gemini-3-flash-preview'): ").strip()
         
-        env_path = Path(".env")
+        # Determine setup location (home dir)
+        setup_env_path = Path.home() / ".flame" / ".env"
+        setup_env_path.parent.mkdir(parents=True, exist_ok=True)
+        
         env_content = []
-        if env_path.exists():
-            env_content = env_path.read_text(encoding="utf-8").splitlines()
+        if setup_env_path.exists():
+            env_content = setup_env_path.read_text(encoding="utf-8").splitlines()
             
         # Basic replacement or append
         new_env = []
@@ -96,8 +112,8 @@ Examples:
         if model and not model_found:
             new_env.append(f"FLAME_MODEL={model}")
             
-        env_path.write_text("\n".join(new_env) + "\n", encoding="utf-8")
-        console.print("\n[green]✅ Setup complete! Settings saved to .env[/green]")
+        setup_env_path.write_text("\n".join(new_env) + "\n", encoding="utf-8")
+        console.print(f"\n[green]✅ Setup complete! Settings saved to {setup_env_path}[/green]")
         console.print("Run [bold cyan]flame[/bold cyan] to start chatting!")
         sys.exit(0)
 
