@@ -83,6 +83,7 @@ Examples:
             console.print("[red]❌ Setup cancelled: API key cannot be empty.[/red]")
             sys.exit(1)
             
+        api_base = input("Enter API Base URL (press Enter for default 'https://api.example.com/proxy/v1'): ").strip()
         model = input("Enter preferred model (press Enter for default 'google/gemini-3-flash-preview'): ").strip()
         
         # Determine setup location (home dir)
@@ -96,11 +97,15 @@ Examples:
         # Basic replacement or append
         new_env = []
         key_found = False
+        base_found = False
         model_found = False
         for line in env_content:
             if line.startswith("FLAME_API_KEY="):
                 new_env.append(f"FLAME_API_KEY={api_key}")
                 key_found = True
+            elif line.startswith("FLAME_API_BASE_URL=") and api_base:
+                new_env.append(f"FLAME_API_BASE_URL={api_base}")
+                base_found = True
             elif line.startswith("FLAME_MODEL=") and model:
                 new_env.append(f"FLAME_MODEL={model}")
                 model_found = True
@@ -109,6 +114,8 @@ Examples:
                 
         if not key_found:
             new_env.append(f"FLAME_API_KEY={api_key}")
+        if api_base and not base_found:
+            new_env.append(f"FLAME_API_BASE_URL={api_base}")
         if model and not model_found:
             new_env.append(f"FLAME_MODEL={model}")
             
